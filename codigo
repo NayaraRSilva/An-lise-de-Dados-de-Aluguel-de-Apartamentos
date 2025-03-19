@@ -1,0 +1,118 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt ## importando para aparecer os graficos.
+
+# Carregar o arquivo Excel
+aluguel_casa = pd.read_excel(r"C:\Users\nayar\Downloads\houses_rent.xlsx")
+
+# Exibir as 5 primeiras linhas
+print(aluguel_casa.head())
+
+# Exibir as 5 ultimas linhas
+print(aluguel_casa.tail())
+
+# Rename : Esse código estou renomeando as colunas que tinha espaço, alterando para "_"
+aluguel_casa = aluguel_casa.rename(columns={"parking spaces":"parking_spaces", "rent amount": "rent_amount", "property tax": "property_tax", "fire insurance":"fire_insurance"})
+print(aluguel_casa.tail())
+
+# Verificar Tipo de Dados
+print(aluguel_casa.dtypes)
+
+#Função mais completa do DTYPES, neel podemos der index, linhas, se possui linhas nulas.
+aluguel_casa.info()
+
+#Atualizar os tipos de dados
+
+aluguel_casa = aluguel_casa.astype({"rent_amount":"float", "property_tax":"float", "fire_insurance":"float","total":"float"})
+aluguel_casa.info()
+print(aluguel_casa.dtypes)
+
+#Visualização da base de dados
+print(aluguel_casa.head())
+
+# Exibir todas as colunas
+pd.set_option('display.max_columns', None)
+print(aluguel_casa.head())
+
+
+#Selecione apenas algumas colunas do dataset, colocando describre monstra as principais
+#metricas da estatística numerica
+print(aluguel_casa[["area", "rooms", "bathroom","parking_spaces","rent_amount","property_tax","fire_insurance","total"]].describe())
+
+# Filtro de dados
+# Dentro da minha base para minha coluna total quero valores até 4000
+aluguel_casa = aluguel_casa[(aluguel_casa["total"] <= 4000)]
+print(aluguel_casa)
+
+# Filtro para um apartamento até 4000 que aceita animal
+aluguel_casa = aluguel_casa[(aluguel_casa["total"] <= 4000) & (aluguel_casa["animal"] == "accept")]
+print(aluguel_casa)
+
+# Filtro para um apartamento até 4000 que aceita animal e pode ser ap com 2 ou 3 quartos
+aluguel_casa = aluguel_casa[
+    (aluguel_casa["total"] <= 4000) &
+    (aluguel_casa["animal"] == "accept") &
+    ((aluguel_casa["rooms"] == 2) | (aluguel_casa["rooms"] == 3))
+]
+print(aluguel_casa.tail())
+print(aluguel_casa.describe())
+
+## Forma mais simples de filtrar dados os mesmo filtros acima.
+
+aluguel_casa = aluguel_casa.query("total <=4000 and animal == 'accept'")
+print(aluguel_casa)
+
+aluguel_casa = aluguel_casa.query("total <=4000 and animal == 'accept' and (rooms == 2 or rooms ==3)")
+
+### Agrupando dados: média de total por cidade
+
+agg_city_price= aluguel_casa.groupby(["city"])["total"].agg("mean").reset_index()
+print(agg_city_price)
+
+### Agrupando dados: Por quartos e quantidades de banheiro, média do total
+agg_bath_room_price= aluguel_casa.groupby(["bathroom","rooms"])["total"].agg("mean").reset_index()
+print(agg_bath_room_price)
+
+## PARTE VISUAL DA ANALISE DE DADOS
+
+ax = sns.barplot(data=agg_bath_room_price, x="rooms", y="total", color="blue")
+ax.set(xlabel="qtd de quartos", ylabel= "Média do preço") # alterar o nome das colunas
+plt.show()
+
+ax = sns.barplot(data=agg_bath_room_price, x="bathroom", y="total", color="green")
+ax.set(xlabel="qtd de banheiros", ylabel= "Média do preço") # alterar o nome das colunas
+plt.show()
+
+
+
+agg_area = aluguel_casa[["area"]]
+
+
+print(agg_area.describe())
+
+agg_area = agg_area.query('area <=100')
+sns.histplot(data=agg_area, x= 'area')
+plt.show()
+
+## hue = dividido por cidade
+print(agg_city_price)
+sns.histplot(data=aluguel_casa, x="total", hue="city")
+plt.show()
+
+##
+aluguel_casa = aluguel_casa.query("city=='Porto'")
+print(aluguel_casa.describe())
+
+#filtrar quantas ap tem por andar
+andar = aluguel_casa.groupby("floor").index.nunique().sort_values(ascending= False)
+print(andar)
+
+agg_floor_price = aluguel_casa.groupby("floor")["total"].agg("mean").reset_index()
+print(agg_floor_price)
+
+sns.barplot(agg_floor_price, x="floor", y="total", color="blue")
+plt.show()
+
+sixteen_floor = aluguel_casa.query("floor == 16")
+print(sixteen_floor)
+
